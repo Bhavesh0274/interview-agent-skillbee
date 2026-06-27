@@ -55,9 +55,11 @@ get committed.
 streamlit run app.py
 ```
 
-Then in the browser: pick a language in the sidebar → **Start** → record your
-answer → the agent transcribes it, responds by voice, and follows up. Click
-**End interview & get feedback** any time for the scored report.
+Then in the browser: you'll land on a **"Choose your interview language"**
+screen — pick **English / हिन्दी / Deutsch** and the interview starts in that
+language. Record your answer, stop the recording, and the agent transcribes it,
+replies by voice, and follows up. Use **Start over** in the sidebar to pick a
+different language, or **End interview & get feedback** for the scored report.
 
 ### 3b. Or run the text CLI (no microphone needed)
 

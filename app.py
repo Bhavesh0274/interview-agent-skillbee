@@ -188,6 +188,38 @@ def render_transcript(session: InterviewSession):
                 st.write(turn["text"] or "_(no answer)_")
 
 
+def render_language_picker(store_preview):
+    """Step 1: a prominent language-selection screen. Picking a language both
+    sets it and starts the interview, so the whole session runs in that
+    language."""
+    st.markdown("### Step 1 — Choose your interview language")
+    st.write(
+        "The entire interview — the questions, the follow-ups, and your final "
+        "feedback — will be conducted in the language you pick here."
+    )
+    st.write("")
+
+    flags = {"en": "🇬🇧", "hi": "🇮🇳", "de": "🇩🇪"}
+    cols = st.columns(len(SUPPORTED_LANGUAGES))
+    for col, code in zip(cols, SUPPORTED_LANGUAGES):
+        with col:
+            label = f"{flags.get(code, '')}  {LANG_LABELS.get(code, code)}"
+            if st.button(label, key=f"pick_{code}", type="primary",
+                         use_container_width=True):
+                try:
+                    start_interview(code)
+                except Exception as exc:  # noqa: BLE001
+                    st.error(f"Could not start: {exc}")
+                else:
+                    st.rerun()
+
+    st.write("")
+    st.caption(
+        f"Domain: **{store_preview.domain}**. Once you choose, the agent greets "
+        "you and asks the first question out loud — just answer by voice."
+    )
+
+
 def main():
     init_state()
     ss = st.session_state
@@ -202,32 +234,19 @@ def main():
     st.caption(f"Domain: **{store_preview.domain}** · "
                "Speak your answers; the agent listens, follows up, and scores you.")
 
-    # ---- Sidebar: configuration ----
+    # ---- Sidebar: session status ----
     with st.sidebar:
-        st.header("Setup")
-        lang_code = st.selectbox(
-            "Interview language",
-            options=list(SUPPORTED_LANGUAGES.keys()),
-            format_func=lambda c: LANG_LABELS.get(c, c),
-            index=list(SUPPORTED_LANGUAGES.keys()).index(base_cfg.language)
-            if base_cfg.language in SUPPORTED_LANGUAGES else 0,
-            disabled=ss.started,
-            help="Language is locked once the interview starts. Reset to change it.",
-        )
-        col_a, col_b = st.columns(2)
-        with col_a:
-            if st.button("Start", type="primary", disabled=ss.started,
-                         use_container_width=True):
-                try:
-                    start_interview(lang_code)
-                except Exception as exc:  # noqa: BLE001
-                    st.error(f"Could not start: {exc}")
-                st.rerun()
-        with col_b:
-            if st.button("Reset", disabled=not ss.started,
+        st.header("Session")
+        if ss.started and ss.session is not None:
+            active = LANG_LABELS.get(ss.session.language, ss.session.language)
+            st.success(f"Language: **{active}**")
+            st.caption("Locked for this interview.")
+            if st.button("↩︎ Start over (change language)",
                          use_container_width=True):
                 reset_interview()
                 st.rerun()
+        else:
+            st.info("Choose a language on the right to begin.")
 
         st.divider()
         st.markdown(
@@ -237,13 +256,14 @@ def main():
             "- Click **End interview** any time for feedback."
         )
 
-    # ---- Not started yet ----
+    # ---- Step 1: language selection (nothing else until a language is chosen) ----
     if not ss.started or ss.session is None:
-        st.info("Pick a language in the sidebar and press **Start** to begin.")
+        render_language_picker(store_preview)
         return
 
     session: InterviewSession = ss.session
 
+    # ---- Step 2: the interview proceeds in the chosen language ----
     # ---- Progress ----
     q_num = min(session.idx + 1, session.total_questions)
     st.progress(
