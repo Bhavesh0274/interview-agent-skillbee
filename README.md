@@ -13,8 +13,11 @@ adaptive interviewer.
 |---|---|---|
 | Speech-to-text | Groq `whisper-large-v3-turbo` | One multilingual model for en/hi/de, ~216× real-time |
 | Interviewer LLM | Groq `openai/gpt-oss-120b` | Fast on Groq, reasoning + JSON mode; current (post-Llama-3.3 deprecation) |
-| Text-to-speech | ElevenLabs `eleven_flash_v2_5` | ~75 ms latency, 32 languages incl. en/hi/de |
+| Text-to-speech | **Edge TTS** (free, default) · ElevenLabs (optional upgrade) | Free, no key, native en/hi/de voices; ElevenLabs `eleven_flash_v2_5` for extra polish |
 | Embeddings (optional) | `paraphrase-multilingual-MiniLM-L12-v2` | Tiny multilingual model for semantic navigation/scale |
+
+**Cost:** with the defaults this runs on a **free Groq key and nothing else** —
+Edge TTS needs no key or payment. ElevenLabs is an optional quality upgrade.
 
 > The full reasoning behind every choice is in **`ARCHITECTURE.md`** (the
 > weight-bearing design note) and **`ENGINEERING_NOTES.md`** (a stage-by-stage
@@ -33,16 +36,18 @@ python -m venv .venv && source .venv/bin/activate    # optional but recommended
 pip install -r requirements.txt
 ```
 
-### 2. Add your API keys
+### 2. Add your API key
 
 ```bash
 cp .env.example .env
-# then open .env and paste your keys:
-#   GROQ_API_KEY=...          (https://console.groq.com/keys)
-#   ELEVENLABS_API_KEY=...    (https://elevenlabs.io -> API Keys)
+# then open .env and paste your Groq key:
+#   GROQ_API_KEY=...          (free at https://console.groq.com/keys)
 ```
 
-`.env` is git-ignored, so your keys never get committed.
+That's the **only** key you need — the default TTS (Edge) is free and keyless.
+`ELEVENLABS_API_KEY` is optional and only needed if you switch to ElevenLabs in
+`config.yaml` for higher-quality voices. `.env` is git-ignored, so keys never
+get committed.
 
 ### 3a. Run the voice app (the main experience)
 
@@ -97,7 +102,7 @@ STT/LLM/TTS models to use, voices, retrieval mode. For example:
 - `language: en | hi | de` — interview language (also switchable live in the app).
 - `interview.max_follow_ups_per_question` — how hard the agent probes before moving on.
 - `llm.model` — swap `openai/gpt-oss-120b` → `openai/gpt-oss-20b` for lower latency.
-- `tts.model` — swap `eleven_flash_v2_5` → `eleven_multilingual_v2` for higher quality.
+- `tts.provider` — `edge` (free, default) or `elevenlabs` (needs a key, higher quality).
 - `retrieval.mode: id | semantic` — see ARCHITECTURE.
 
 ---

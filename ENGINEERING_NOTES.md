@@ -146,7 +146,19 @@ the three supported languages.
 `convert()` returns an iterator of byte chunks which we join into one blob for
 Streamlit to play. We pin pronunciation with an ISO `language_code`.
 
-**Why ElevenLabs `eleven_flash_v2_5`.**
+**Default vs. upgrade — cost.** The default provider is **`edge`** (Microsoft
+Edge's online neural voices via `edge-tts`): free, no API key, and native voices
+for en/hi/de. That choice means the whole project runs on a single *free* Groq
+key with nothing paid — the right default for a take-home you want a reviewer to
+run instantly. **ElevenLabs is the quality/latency upgrade**, behind the same
+`TextToSpeech` Protocol, so moving up is: set `tts.provider: elevenlabs`, add the
+key, swap the voice ids. This is the payoff of putting the provider behind an
+interface — "it's paid" became a one-line config change, not a rewrite. (Note:
+Groq also has a TTS endpoint now, `playai-tts`, but it covers only English +
+Arabic, so it can't satisfy the en/hi/de requirement — which is exactly why Edge
+is the default and Groq TTS isn't.)
+
+**Why ElevenLabs `eleven_flash_v2_5` (when used).**
 - **~75 ms model latency** — the brief explicitly flags responsiveness, so the
   *fast* model is the right default for a voice agent.
 - **32 languages incl. en/hi/de**, and one multilingual voice

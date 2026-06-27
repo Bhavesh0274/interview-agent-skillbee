@@ -38,24 +38,32 @@ llm:
 
 # ---- Text-to-speech (the "mouth") -------------------------------------------
 tts:
-  provider: elevenlabs
-  # flash_v2_5 = ~75ms latency, 32 languages (incl. en/hi/de). Best for a
-  # responsive voice agent. Use "eleven_multilingual_v2" for higher quality
-  # at the cost of latency.
-  model: "eleven_flash_v2_5"
-  output_format: "mp3_44100_128"
-  # A single multilingual voice that handles en/hi/de. Override per language
-  # below if you want a native-sounding voice per language.
-  default_voice_id: "JBFqnCBsd6RMkjVDRZzb"   # "George" — works across languages
+  # "edge" = free, no API key (Microsoft Edge neural voices via edge-tts).
+  #          Native voices for en/hi/de. This is the default so the whole app
+  #          runs on just a free Groq key — nothing paid.
+  # "elevenlabs" = higher quality, needs ELEVENLABS_API_KEY. See block below.
+  provider: edge
+  model: "edge"                     # unused for edge; set for elevenlabs (e.g. eleven_flash_v2_5)
+  output_format: "mp3_44100_128"    # used by elevenlabs; edge always returns mp3
+  # For edge, these are Edge voice NAMES; for elevenlabs they are voice IDs.
+  default_voice_id: "en-US-AriaNeural"
   voice_by_language:
-    en: "JBFqnCBsd6RMkjVDRZzb"
-    hi: "JBFqnCBsd6RMkjVDRZzb"
-    de: "JBFqnCBsd6RMkjVDRZzb"
-  voice_settings:
-    stability: 0.5          # keeps accent consistent across language switches
+    en: "en-US-AriaNeural"
+    hi: "hi-IN-SwaraNeural"
+    de: "de-DE-KatjaNeural"
+  voice_settings:                   # used by elevenlabs only
+    stability: 0.5
     similarity_boost: 0.75
     style: 0.0
     use_speaker_boost: true
+
+# ---- (Swap) Higher-quality TTS with ElevenLabs ------------------------------
+# To use ElevenLabs instead of free Edge voices:
+#   1. put ELEVENLABS_API_KEY in your .env
+#   2. set tts.provider: elevenlabs  (above)
+#   3. set tts.model: "eleven_flash_v2_5"  (or "eleven_multilingual_v2")
+#   4. replace the voice_by_language values with ElevenLabs voice IDs, e.g.
+#      en/hi/de: "JBFqnCBsd6RMkjVDRZzb"  ("George" — works across languages)
 
 # ---- Retrieval / grounding --------------------------------------------------
 retrieval:

@@ -2,9 +2,13 @@
 # Versions are lower-bounded to what was verified working (June 2026); the
 # providers' APIs used here are stable across these minors.
 
-# --- Speech + LLM (all via Groq + ElevenLabs managed APIs) ---
+# --- Speech + LLM ---
 groq>=1.5.0                 # Whisper STT + gpt-oss LLM (one client for both)
-elevenlabs>=2.54.0          # Text-to-speech (eleven_flash_v2_5)
+edge-tts>=7.0              # FREE text-to-speech, no API key (default TTS)
+
+# --- TTS upgrade (optional) ---
+# Only needed if you set tts.provider: elevenlabs in config.yaml.
+elevenlabs>=2.54.0          # higher-quality TTS (eleven_flash_v2_5); needs a key
 
 # --- App / UI ---
 streamlit>=1.40             # voice front-end (st.audio_input + st.audio)
