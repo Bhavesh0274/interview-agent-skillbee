@@ -1,0 +1,25 @@
+# Core runtime dependencies for the Voice Interview Agent.
+# Versions are lower-bounded to what was verified working (June 2026); the
+# providers' APIs used here are stable across these minors.
+
+# --- Speech + LLM (all via Groq + ElevenLabs managed APIs) ---
+groq>=1.5.0                 # Whisper STT + gpt-oss LLM (one client for both)
+elevenlabs>=2.54.0          # Text-to-speech (eleven_flash_v2_5)
+
+# --- App / UI ---
+streamlit>=1.40             # voice front-end (st.audio_input + st.audio)
+
+# --- Config & data ---
+pyyaml>=6.0                 # config.yaml + questions.yaml
+python-dotenv>=1.0          # load API keys from .env
+
+# --- Retrieval ---
+numpy>=1.26                 # brute-force cosine over question embeddings
+sentence-transformers>=3.0  # multilingual embeddings (paraphrase-multilingual-MiniLM-L12-v2)
+rank-bm25>=0.2.2            # lexical fallback if the embedding model can't load
+
+# NOTE: sentence-transformers pulls in torch, which is large. It is only needed
+# for retrieval.mode = "semantic". If you set retrieval.mode = "id" in
+# config.yaml (the exact-lookup path that drives the interview), you can run the
+# whole agent without sentence-transformers/torch installed — the store simply
+# skips the embedding index. rank-bm25 then covers any free-form matching.

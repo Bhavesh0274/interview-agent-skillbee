@@ -1,0 +1,225 @@
+# =============================================================================
+# REFERENCE Q&A SET  —  Backend Software Engineer (Screening)
+# =============================================================================
+# This file is the single source of truth for the interview. The core logic
+# never hard-codes a question. To change the interview you ONLY edit this file:
+#   - add a question  -> append a new "- id: ..." block
+#   - edit a question -> change its text / ideal_answer
+#   - reorder         -> move blocks around (the agent walks them top-to-bottom)
+#
+# Schema per question:
+#   id            (str)  unique, stable key. Used as the retrieval key.
+#   topic         (str)  short label, used in the final feedback report.
+#   difficulty    (str)  easy | medium | hard  (informational; tunes follow-ups)
+#   question      (str)  the CANONICAL question (English). The agent re-phrases
+#                        it naturally in the configured interview language.
+#   ideal_answer  (str)  the bullet points a STRONG answer covers. This is the
+#                        grounding. It is shown to the LLM for scoring ONLY and
+#                        is NEVER read out to the candidate.
+#   follow_up_hints (list, optional) safe nudges the interviewer may use to
+#                        guide a stuck candidate WITHOUT leaking the ideal answer.
+# =============================================================================
+
+domain: "Backend Software Engineer — Screening Round"
+default_language: en          # en | hi | de  (overridable from config.yaml / UI)
+
+questions:
+
+  - id: q1_intro_project
+    topic: "Project deep-dive"
+    difficulty: easy
+    question: >-
+      To get started, walk me through a backend project you have built
+      recently. What was the problem, what did you build, and what was your
+      specific role in it?
+    ideal_answer: |
+      A strong answer is concrete and scoped to THEIR contribution, not the team's:
+      - States the problem / business need in one or two sentences.
+      - Describes the architecture at a high level (services, data store, key APIs).
+      - Clearly separates "what the team did" from "what I personally did".
+      - Mentions at least one real engineering decision or trade-off they made.
+      - Names the concrete outcome or impact (users, latency, reliability, etc.).
+      Red flags: vague "we built an app", no personal ownership, only listing
+      technologies with no reasoning.
+    follow_up_hints:
+      - "Ask them to zoom into one component they personally owned."
+      - "Ask what they would change if they rebuilt it today."
+
+  - id: q2_rest_idempotency
+    topic: "API design"
+    difficulty: medium
+    question: >-
+      When you design a REST endpoint that creates a payment, how do you make
+      sure a client that retries the request after a timeout does not get
+      charged twice?
+    ideal_answer: |
+      The core concept being tested is IDEMPOTENCY.
+      - The client sends an idempotency key (e.g. a UUID) with the request.
+      - The server stores the key with the result of the first successful
+        operation; on a retry with the same key it returns the stored result
+        instead of performing the operation again.
+      - Distinguishes safe/idempotent methods (GET, PUT, DELETE) from POST,
+        and explains why naive POST is the problem.
+      - Bonus: mentions where the key is stored (DB unique constraint / cache),
+        TTL/expiry, and handling concurrent retries (locking / unique index).
+    follow_up_hints:
+      - "Ask: where exactly do you store the idempotency key, and for how long?"
+      - "Ask what happens if two retries arrive at the same instant."
+
+  - id: q3_sql_vs_nosql
+    topic: "Data modelling"
+    difficulty: medium
+    question: >-
+      You are starting a new service and need to choose a database. How do you
+      decide between a relational SQL database and a NoSQL store?
+    ideal_answer: |
+      Looking for decision-making, not a memorised list.
+      - SQL fits structured, relational data, multi-row transactions (ACID),
+        complex queries / joins, and when the schema is reasonably stable.
+      - NoSQL (document/key-value/wide-column) fits flexible/evolving schemas,
+        very high write throughput, simple access patterns, and horizontal
+        scale where joins are avoided.
+      - Good answers tie the choice to ACCESS PATTERNS and consistency needs,
+        not hype.
+      - Bonus: mentions indexing, read/write ratio, or that "polyglot
+        persistence" (use both) is legitimate.
+    follow_up_hints:
+      - "Push for a concrete example: which would YOU pick for an order system, and why?"
+      - "Ask how an index would change their answer."
+
+  - id: q4_concurrency_race
+    topic: "Concurrency"
+    difficulty: hard
+    question: >-
+      Two requests try to book the last available seat at the same time. Both
+      read 'one seat left' and both proceed to book it. How do you stop this
+      double-booking?
+    ideal_answer: |
+      Tests understanding of RACE CONDITIONS and how to serialise access.
+      - Identifies the read-then-write race / lost update.
+      - Offers at least one correct mechanism:
+          * pessimistic locking (SELECT ... FOR UPDATE on the row),
+          * optimistic concurrency (version column + compare-and-set, retry),
+          * a database constraint / atomic conditional update
+            (UPDATE ... WHERE seats > 0), or
+          * a distributed lock if it spans services.
+      - Explains the trade-off (locking reduces throughput; optimistic needs
+        retry handling).
+    follow_up_hints:
+      - "Ask for the trade-off between pessimistic and optimistic locking."
+      - "Ask how their answer changes if the seats live across two microservices."
+
+  - id: q5_caching
+    topic: "Caching"
+    difficulty: medium
+    question: >-
+      Your read-heavy API is hitting the database too hard. You decide to add a
+      cache. Walk me through how you'd design it and what can go wrong.
+    ideal_answer: |
+      Tests practical caching knowledge.
+      - Names a pattern: cache-aside (lazy) is the common default; mentions
+        read-through / write-through as alternatives.
+      - Discusses INVALIDATION: TTL expiry and/or explicit eviction on write —
+        and acknowledges invalidation is the hard part.
+      - Mentions at least one failure mode: stale data, thundering herd /
+        cache stampede on expiry, or cache penetration for missing keys.
+      - Bonus: where the cache lives (in-process vs Redis/Memcached) and the
+        consistency trade-off.
+    follow_up_hints:
+      - "Ask how they keep the cache from serving stale data after an update."
+      - "Ask what happens when a popular key expires and 1000 requests miss at once."
+
+  - id: q6_design_url_shortener
+    topic: "System design (lite)"
+    difficulty: hard
+    question: >-
+      At a high level, how would you design a URL shortening service like
+      bit.ly? Focus on the core pieces, not every detail.
+    ideal_answer: |
+      Tests the ability to structure a system at screening depth.
+      - Core flow: generate a short code -> store mapping {code -> long URL}
+        -> redirect (HTTP 301/302) on lookup.
+      - Short-code generation: base62 of an auto-increment ID, or a hash, and
+        an awareness of collision handling.
+      - Storage: a key-value lookup by code; notes it is extremely read-heavy.
+      - Scale levers: caching hot URLs, read replicas.
+      - Bonus: analytics, custom aliases, expiry, 301 vs 302 trade-off.
+    follow_up_hints:
+      - "Ask how they generate the short code and avoid collisions."
+      - "Ask which part they'd cache and why."
+
+  - id: q7_debug_production
+    topic: "Debugging / ops"
+    difficulty: medium
+    question: >-
+      A production endpoint suddenly gets slow — p99 latency jumps from 100ms
+      to 3 seconds. You're on call. Walk me through how you investigate.
+    ideal_answer: |
+      Tests a STRUCTURED debugging method, not a lucky guess.
+      - Starts from signals: metrics/dashboards, recent deploys, error rates,
+        traffic spikes.
+      - Forms hypotheses and narrows: is it one endpoint or all? one host or
+        all? DB-bound, CPU-bound, downstream dependency, or lock contention?
+      - Uses tools: logs, traces/APM, slow-query logs, resource metrics.
+      - Mentions mitigation vs root cause (roll back / scale out first, then
+        diagnose).
+      Red flag: immediately "rewrite the code" without measuring.
+    follow_up_hints:
+      - "Ask what the FIRST thing they'd look at is, and why."
+      - "Ask how they'd tell a DB problem apart from a downstream-service problem."
+
+  - id: q8_complexity
+    topic: "Complexity analysis"
+    difficulty: easy
+    question: >-
+      You need to find whether any two numbers in a large list add up to a
+      target value. What's a naive approach, what's its time complexity, and
+      can you do better?
+    ideal_answer: |
+      Tests Big-O reasoning and the classic space/time trade-off.
+      - Naive: check every pair -> O(n^2) time, O(1) extra space.
+      - Better: one pass with a hash set, checking for (target - x) -> O(n)
+        time, O(n) space.
+      - Articulates the trade-off (spending memory to save time).
+      - Bonus: if the array were sorted, two-pointer is O(n) time, O(1) space.
+    follow_up_hints:
+      - "Ask for the time AND space complexity of their improved version."
+      - "Ask how the answer changes if the list is already sorted."
+
+  - id: q9_testing
+    topic: "Quality / testing"
+    difficulty: easy
+    question: >-
+      How do you decide what to test in a backend service, and what does your
+      testing strategy look like?
+    ideal_answer: |
+      Tests judgement about quality, not dogma.
+      - Distinguishes layers: unit (logic in isolation), integration (DB /
+        external calls), and end-to-end / contract tests.
+      - Prioritises by risk: critical paths, edge cases, and previously broken
+        areas over chasing 100% coverage.
+      - Mentions running tests in CI, and that tests should be fast and
+        deterministic.
+      - Bonus: regression tests for bugs, mocking external dependencies.
+    follow_up_hints:
+      - "Ask where they'd draw the line between a unit and an integration test."
+      - "Ask if 100% coverage is a good goal — why or why not?"
+
+  - id: q10_disagreement
+    topic: "Collaboration"
+    difficulty: medium
+    question: >-
+      Tell me about a time you disagreed with a teammate on a technical
+      decision. How did you handle it and what was the outcome?
+    ideal_answer: |
+      Behavioural — tests communication and engineering maturity.
+      - Describes a concrete situation and both positions fairly.
+      - Shows they argued with DATA / reasoning, not ego, and listened to the
+        other side.
+      - Reaches a resolution: convinced, was convinced, prototyped to decide,
+        or disagreed-and-committed.
+      - Reflects on what they learned.
+      Red flags: "I was just right", no resolution, or making it personal.
+    follow_up_hints:
+      - "Ask what they would do differently next time."
+      - "Ask how they decided whose approach to go with."

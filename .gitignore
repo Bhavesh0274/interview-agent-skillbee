@@ -1,0 +1,30 @@
+# Secrets — never commit real API keys
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Caches
+.cache/
+.pytest_cache/
+.mypy_cache/
+
+# Model / embedding caches (sentence-transformers downloads here)
+.sentence_transformers/
+.huggingface/
+
+# OS / editor cruft
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Local audio dumps if you save any during testing
+*.wav
+*.mp3
+!demo/*.mp3

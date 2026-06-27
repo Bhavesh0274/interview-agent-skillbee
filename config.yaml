@@ -1,0 +1,68 @@
+# =============================================================================
+# RUNTIME CONFIGURATION
+# =============================================================================
+# Everything that you might reasonably want to change without editing code
+# lives here. API keys do NOT go here — they go in a .env file (see .env.example)
+# so that secrets never land in git.
+# =============================================================================
+
+# ---- Interview language -----------------------------------------------------
+# en = English | hi = Hindi | de = German
+# Drives: STT language hint, the language the interviewer speaks/writes, and
+# the TTS voice language. Can be overridden live from the sidebar in the app.
+language: en
+
+interview:
+  dataset_path: "data/questions.yaml"
+  max_follow_ups_per_question: 2   # after this many, the agent must move on
+  # Interview can be cut short for a quick demo. null = ask every question.
+  max_questions: null
+
+# ---- Speech-to-text (the "ear") ---------------------------------------------
+stt:
+  provider: groq
+  model: "whisper-large-v3-turbo"  # multilingual, ~216x real-time on Groq
+  # whisper auto-detects language, but we pass a hint for accuracy on hi/de.
+  pass_language_hint: true
+
+# ---- The interviewer brain (LLM) --------------------------------------------
+llm:
+  provider: groq
+  # gpt-oss-120b is Groq's recommended successor after llama-3.3-70b-versatile
+  # was deprecated (17 Jun 2026). Swap to "openai/gpt-oss-20b" for lower latency
+  # or any other Groq chat model — nothing else needs to change.
+  model: "openai/gpt-oss-120b"
+  temperature: 0.4          # low-ish: consistent judgement, still natural
+  max_tokens: 700
+  reasoning_effort: low     # keep latency down on reasoning-capable models
+
+# ---- Text-to-speech (the "mouth") -------------------------------------------
+tts:
+  provider: elevenlabs
+  # flash_v2_5 = ~75ms latency, 32 languages (incl. en/hi/de). Best for a
+  # responsive voice agent. Use "eleven_multilingual_v2" for higher quality
+  # at the cost of latency.
+  model: "eleven_flash_v2_5"
+  output_format: "mp3_44100_128"
+  # A single multilingual voice that handles en/hi/de. Override per language
+  # below if you want a native-sounding voice per language.
+  default_voice_id: "JBFqnCBsd6RMkjVDRZzb"   # "George" — works across languages
+  voice_by_language:
+    en: "JBFqnCBsd6RMkjVDRZzb"
+    hi: "JBFqnCBsd6RMkjVDRZzb"
+    de: "JBFqnCBsd6RMkjVDRZzb"
+  voice_settings:
+    stability: 0.5          # keeps accent consistent across language switches
+    similarity_boost: 0.75
+    style: 0.0
+    use_speaker_boost: true
+
+# ---- Retrieval / grounding --------------------------------------------------
+retrieval:
+  # "id"       -> exact lookup by question id (primary path; the interview is
+  #               agent-driven so this is what actually runs each turn).
+  # "semantic" -> ALSO build embeddings so free-form text can be matched to the
+  #               nearest canonical question (used for scale / flexible nav).
+  mode: semantic
+  embedding_model: "paraphrase-multilingual-MiniLM-L12-v2"  # tiny, multilingual
+  top_k: 1
