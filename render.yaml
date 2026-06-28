@@ -1,0 +1,20 @@
+# Render "Blueprint" — lets Render configure the service automatically when you
+# point it at this repo (New + → Blueprint). You only add the secret value.
+#
+# This uses Render's native Python runtime (no Docker needed). To deploy with
+# the Dockerfile instead, set `runtime: docker` and remove build/startCommand.
+services:
+  - type: web
+    name: voice-interview-api
+    runtime: python
+    plan: free                       # free tier: spins down when idle (see README)
+    region: singapore                # closest Render region to India; or: oregon, frankfurt
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn api:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false                  # you set the value in the dashboard (kept secret)
+      # If you switch tts.provider to elevenlabs in config.yaml, also add:
+      # - key: ELEVENLABS_API_KEY
+      #   sync: false
