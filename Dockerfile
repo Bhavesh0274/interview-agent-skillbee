@@ -18,8 +18,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the application.
 COPY . .
-
+EXPOSE 8000
 # Hosts inject $PORT at runtime; bind to it. Shell form so $PORT expands.
 # Single worker keeps the in-memory session store coherent (see README:
 # use Redis + multiple workers for real production scale).
-CMD uvicorn api:app --host 0.0.0.0 --port ${PORT}
+CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000"}
