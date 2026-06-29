@@ -37,11 +37,6 @@ hundreds of questions a config change rather than a rewrite. If the embedding
 model can't load, the store transparently falls back to **BM25** lexical
 matching, so grounding never breaks.
 
-**Why no vector DB (FAISS/Pinecone).** For *N* in the tens, a numpy matrix
-multiply beats any index — there is no build/query overhead and nothing to
-operate. A vector database earns its complexity at ~10⁴+ vectors, not 10.
-Reaching for Pinecone here would be over-engineering, and choosing *not* to is a
-deliberate judgement, not an omission.
 
 ## 2. Keeping the LLM an interviewer (grounded, not leaking)
 
