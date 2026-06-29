@@ -6,23 +6,7 @@ design**, **keeping the LLM an interviewer (grounded but non-leaking)**, and
 judgement in the model* — the orchestrator owns control flow, the model owns
 natural language.
 
-## System at a glance
 
-```
- mic ─▶ STT ─▶ ┌─────────────── orchestrator (interview.py) ───────────────┐ ─▶ TTS ─▶ speaker
- (Whisper)     │  owns: question pointer, follow-up budget, transcripts     │   (ElevenLabs)
-               │  each turn → inject reference for current Q (ephemeral)    │
-               │            → call interviewer LLM → enforce invariants      │
-               └──────────────▲──────────────────────────────┬─────────────┘
-                              │ reference (id lookup)         │ structured JSON turn
-                    reference_store.py                      llm.py (gpt-oss)
-                              │                                │
-                              └── data/questions.yaml          └── end → feedback.py (report)
-```
-
-The voice shell (`app.py`) is the only component that knows audio exists. The
-interview core is pure text-in/text-out, which is what let the control flow be
-unit-tested offline with a mock LLM.
 
 ## 1. Retrieval design
 
