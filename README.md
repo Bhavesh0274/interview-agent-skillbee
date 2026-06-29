@@ -16,14 +16,7 @@ adaptive interviewer.
 | Text-to-speech | **Edge TTS** (free, default) · ElevenLabs (optional upgrade) | Free, no key, native en/hi/de voices; ElevenLabs `eleven_flash_v2_5` for extra polish |
 | Embeddings (optional) | `paraphrase-multilingual-MiniLM-L12-v2` | Tiny multilingual model for semantic navigation/scale |
 
-**Cost:** with the defaults this runs on a **free Groq key and nothing else** —
-Edge TTS needs no key or payment. ElevenLabs is an optional quality upgrade.
 
-> The full reasoning behind every choice is in **`ARCHITECTURE.md`** (the
-> weight-bearing design note) and **`ENGINEERING_NOTES.md`** (a stage-by-stage
-> walkthrough of how each module was built and how the tradeoffs were handled).
-
----
 
 ## Quick start
 
