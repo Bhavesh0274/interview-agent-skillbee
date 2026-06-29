@@ -101,28 +101,6 @@ responsive:
   The **ephemeral grounding** and small history keep the prompt short, which
   directly reduces time-to-first-token.
 
-**How I'd make it feel real-time.** The current build is turn-based (record →
-respond), which is the right scope for a prototype. The biggest win is
-**pipelining instead of buffering**: stream STT partials as the user speaks;
-stream the LLM's tokens and, as soon as the first sentence is complete, start
-streaming it to TTS sentence-by-sentence (ElevenLabs supports streaming input)
-and begin audio playback while the rest is still being generated. That overlaps
-the three slow stages instead of running them sequentially and removes most of
-the perceived wait. Secondary levers: switch to `gpt-oss-20b` for lower
-generation latency, keep clients warm to avoid cold connects (already cached in
-the app), and add barge-in (let the candidate interrupt playback) for a natural
-feel.
+Currently, my app follows a record → process → respond approach. To make it feel more like a real conversation, I'd stream each stage instead of waiting for the previous one to finish. While the user is speaking, speech-to-text would run continuously. As soon as the AI generates the first sentence, I'd start converting it to speech and play it immediately. This reduces perceived latency because speech recognition, AI response generation, and text-to-speech all happen simultaneously. I'd also use a faster model, keep API connections warm, and support interruptions so users can speak naturally without waiting for the AI to finish
 
----
-
-### Summary of key tradeoffs
-
-| Decision | Chosen | Rejected | Why |
-|---|---|---|---|
-| Match current reference | Exact id lookup (primary) | Semantic-only | Agent-driven ⇒ deterministic & drift-free |
-| Index for free-form/scale | numpy cosine + BM25 fallback | FAISS/Pinecone | N≈10; vector DB only pays off at ~10k+ |
-| Non-leak guarantee | Structured JSON, surface 1 field | Prompt-only | Output contract is hard; prompts are soft |
-| Control of the script | Orchestrator owns pointer+budget | Let LLM self-manage | Model can't skip/wander/loop |
-| Overall score | Averaged in code | Model-reported | Deterministic, not subject to model mood |
-| TTS model | flash_v2_5 (low latency) | multilingual_v2 | Brief prioritises responsiveness (swap if not) |
-| Multilingual (en/hi/de) | One model per stage | One per language | Fewer moving parts, single config switch |
+r moving parts, single config switch |
