@@ -98,9 +98,9 @@ responsive:
   is a one-line swap when quality matters more than speed.
 - **LLM:** Groq inference is fast; `reasoning_effort=low`, a bounded
   `max_tokens`, and short spoken replies (1–3 sentences) keep generation brief.
-  The **ephemeral grounding** and small history keep the prompt short, which
+  The **grounding** and small history keep the prompt short, which
   directly reduces time-to-first-token.
 
 Currently, my app follows a record → process → respond approach. To make it feel more like a real conversation, I'd stream each stage instead of waiting for the previous one to finish. While the user is speaking, speech-to-text would run continuously. As soon as the AI generates the first sentence, I'd start converting it to speech and play it immediately. This reduces perceived latency because speech recognition, AI response generation, and text-to-speech all happen simultaneously. I'd also use a faster model, keep API connections warm, and support interruptions so users can speak naturally without waiting for the AI to finish
 
-r moving parts, single config switch |
+
