@@ -61,19 +61,6 @@ language. Record your answer, stop the recording, and the agent transcribes it,
 replies by voice, and follows up. Use **Start over** in the sidebar to pick a
 different language, or **End interview & get feedback** for the scored report.
 
-### 3b. Or run the text CLI (no microphone needed)
-
-Great for trying the logic in five seconds or debugging without audio:
-
-```bash
-python cli.py                    # language from config.yaml
-python cli.py --language hi      # override language
-python cli.py --max-questions 3  # short run
-```
-
-You type answers; the same orchestrator + LLM + feedback run end-to-end.
-
----
 
 ## How to customise (no core-code changes)
 
@@ -132,23 +119,8 @@ interview-agent/
 └── ENGINEERING_NOTES.md    # stage-by-stage build + tradeoff walkthrough
 ```
 
----
 
-## Recording the demo
 
-1. `streamlit run app.py`, pick **English** (or hi/de), press **Start**.
-2. Screen-record (Loom/QuickTime/OBS) yourself answering 3–4 questions out loud —
-   include one weak answer so the **follow-up / guidance** behaviour is visible.
-3. Click **End interview & get feedback** to show the scored report.
-4. Keep it to 2–4 minutes.
-
----
-
-## Notes & limitations
-
-- **Turn-based** (record → respond), not full-duplex streaming. That's the right
-  scope for a prototype and keeps the pipeline easy to reason about; the
-  latency section of `ARCHITECTURE.md` describes the streaming path to make it
   feel real-time.
 - **Lightweight install option:** the interview runs on the exact-lookup
   retrieval path, so if you set `retrieval.mode: id` you can skip
